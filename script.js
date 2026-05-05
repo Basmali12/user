@@ -14,7 +14,7 @@ const themesList = [
     { id: 'theme-animated', name: 'متحرك 🌟', bg: 'linear-gradient(45deg, #ee7752, #e73c7e, #23a6d5)' }
 ];
 
-// شاشة البداية وضبط الثيم المحفوظ
+// إعداد شاشة البداية والثيم المحفوظ
 window.addEventListener('load', () => {
     const introScreen = document.getElementById('intro-screen');
     if (introScreen) {
@@ -23,13 +23,11 @@ window.addEventListener('load', () => {
             setTimeout(() => introScreen.style.display = 'none', 800);
         }, 2200);
     }
-    
-    // تطبيق الثيم المحفوظ، وإذا لم يوجد نختار الليلي الافتراضي
     const savedTheme = localStorage.getItem('appTheme') || 'theme-dark';
     document.body.className = savedTheme;
 });
 
-// إعدادات Firebase
+// إعدادات Firebase لربط البيانات
 const firebaseConfig = {
     apiKey: "AIzaSyBnYczto0EvZU-LowX1Ps3NvYALnmmutr0",
     authDomain: "ljioik.firebaseapp.com",
@@ -45,12 +43,12 @@ const db = firebase.firestore();
 let currentTab = 'home';
 let productsData = [];
 let adsData = [];
-let searchQuery = ''; // متغير لحفظ ما يكتبه المستخدم في البحث
+let searchQuery = '';
 
 const mainContent = document.getElementById('main-content');
 const navItems = document.querySelectorAll('.nav-item');
 
-// جلب البيانات من فايربيس
+// جلب البيانات من قاعدة البيانات
 function setupSubscriptions() {
     db.collection("products").onSnapshot(snapshot => {
         productsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -63,19 +61,19 @@ function setupSubscriptions() {
     });
 }
 
-// دالة لمعالجة البحث الفوري
+// دالة البحث الفوري
 window.handleSearch = function(value) {
     searchQuery = value.toLowerCase();
-    renderHome(false); // نمرر false حتى لا نفقد التركيز على مربع البحث
+    renderHome(false); 
 }
 
-// بناء صفحة "الرئيسية"
+// بناء الواجهة الرئيسية وعرض المنتجات
 function renderHome(resetSearch = true) {
-    if(resetSearch && currentTab !== 'home') searchQuery = ''; // تصفير البحث عند التنقل
+    if(resetSearch && currentTab !== 'home') searchQuery = ''; 
 
     let html = '';
 
-    // 1. حقل البحث
+    // إضافة حقل البحث
     html += `
         <div class="search-container">
             <div class="search-box">
@@ -85,12 +83,12 @@ function renderHome(resetSearch = true) {
         </div>
     `;
 
-    // 2. عرض الإعلان العلوي إن وجد (فقط إذا لم يكن يبحث لتقليل التشتت)
+    // عرض الإعلان العلوي
     if (adsData.length > 0 && searchQuery === '') {
         html += `<div class="top-ad-container"><img src="${adsData[0].imageUrl}" alt="إعلان رئيسي"></div>`;
     }
 
-    // 3. فلترة المنتجات حسب البحث (فهرسة من الحروف الأولى)
+    // فلترة المنتجات حسب البحث
     const filteredProducts = productsData.filter(p => p.name.toLowerCase().includes(searchQuery));
 
     if(filteredProducts.length === 0) {
@@ -98,12 +96,13 @@ function renderHome(resetSearch = true) {
     } else {
         html += '<div class="products-wrapper">';
         filteredProducts.forEach(p => {
+            // الهيكل الجديد: الصورة تغطي البطاقة، والاسم بالخارج أسفلها
             html += `
-                <div class="product-card" onclick="openProductPage('${p.id}')">
-                    <div class="product-content-wrapper">
-                        <div class="product-image-wrap"><img src="${p.imageUrl}" alt="${p.name}"></div>
-                        <h3 class="product-name">${p.name}</h3>
+                <div class="product-item" onclick="openProductPage('${p.id}')">
+                    <div class="product-card">
+                        <img src="${p.imageUrl}" alt="${p.name}" class="full-product-image">
                     </div>
+                    <h3 class="product-name-outside">${p.name}</h3>
                 </div>
             `;
         });
@@ -113,18 +112,17 @@ function renderHome(resetSearch = true) {
     mainContent.innerHTML = html;
     lucide.createIcons();
 
-    // إعادة التركيز على حقل البحث إذا كان المستخدم يكتب
+    // إبقاء التركيز على حقل البحث أثناء الكتابة
     if (!resetSearch) {
         const searchInput = document.getElementById('productSearch');
         if (searchInput) {
             searchInput.focus();
-            // وضع المؤشر في نهاية النص
             searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
         }
     }
 }
 
-// وظائف صفحة تفاصيل المنتج
+// وظائف فتح وإغلاق صفحة تفاصيل المنتج
 function openProductPage(productId) {
     const product = productsData.find(p => p.id === productId);
     if (!product) return;
@@ -155,7 +153,7 @@ window.closeProductPage = function() {
     document.getElementById('product-details-page').classList.add('hidden');
 }
 
-// بناء صفحة عن التطبيق
+// صفحة من نحن والخصوصية
 function renderAbout() {
     mainContent.innerHTML = `
         <h2 style="margin-bottom: 20px; text-align: center;">حول التطبيق</h2>
@@ -186,18 +184,17 @@ function renderAbout() {
     lucide.createIcons();
 }
 
-// دالة تغيير الثيم
+// وظائف تغيير الثيم
 window.changeTheme = function(themeId) {
     document.body.className = themeId;
     localStorage.setItem('appTheme', themeId);
-    renderProfile(); // لإعادة تحديث علامة الاختيار
+    renderProfile();
 }
 
-// بناء صفحة حسابي
+// صفحة حسابي (إعدادات المظهر وروابط التواصل)
 function renderProfile() {
     const currentTheme = document.body.className || 'theme-dark';
     
-    // إنشاء أزرار الثيمات
     let themesHtml = '<div class="themes-grid">';
     themesList.forEach(t => {
         const isActive = currentTheme === t.id ? 'active-theme' : '';
@@ -215,7 +212,6 @@ function renderProfile() {
             <i data-lucide="user-circle" style="width: 70px; height: 70px; color: var(--primary-color);"></i>
             <h2>إعدادات الحساب</h2>
         </div>
-
         <div class="app-list" style="margin-bottom: 25px;">
             <div class="app-list-item" style="cursor: default;">
                 <div class="app-list-header" style="justify-content:center;">
@@ -224,7 +220,6 @@ function renderProfile() {
                 ${themesHtml}
             </div>
         </div>
-
         <div class="app-list">
             <a href="https://www.facebook.com/share/1RYfQSXgoz/" target="_blank" class="action-btn btn-facebook">
                 <i data-lucide="facebook"></i> الصفحة الرسمية
@@ -237,7 +232,7 @@ function renderProfile() {
     lucide.createIcons();
 }
 
-// التنقل بين الصفحات السفلية
+// التنقل بين القوائم السفلية
 function switchTab(tabId) {
     currentTab = tabId;
     navItems.forEach(item => {
@@ -265,5 +260,5 @@ navItems.forEach(item => {
     });
 });
 
-// تشغيل النظام
+// تشغيل النظام وجلب البيانات
 setupSubscriptions();
