@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>فن التكنولوجيا الحديث</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <!-- مكتبة الأيقونات لتزيين التطبيق -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+</head>
+<body class="dark-mode">
+    
+    <!-- شاشة التحميل الافتتاحية -->
+    <div id="intro-screen" class="intro-screen">
+        <div class="intro-text">
+            <span>فن</span>
+            <span>التكنولوجيا</span>
+            <span>الحديث</span>
+        </div>
+    </div>
+
+    <!-- الحاوية الرئيسية للتطبيق -->
+    <div class="app-container">
+        <header class="header">
+            <h1 class="logo">فن التكنولوجيا الحديث</h1>
+        </header>
+
+        <!-- منطقة المحتوى الرئيسية -->
+        <main id="main-content" class="main-content">
+            <div class="loader-container">
+                <i data-lucide="loader-2" class="spinner"></i>
+            </div>
+        </main>
+
+        <!-- شريط التصفح السفلي (تم تصغيره في ملف التصميم) -->
+        <nav class="bottom-nav">
+            <button class="nav-item" data-tab="profile">
+                <i data-lucide="user"></i>
+                <span>حسابي</span>
+            </button>
+            
+            <button class="nav-item active center-tab" data-tab="home">
+                <div class="circle">
+                    <i data-lucide="home"></i>
+                </div>
+                <span>الرئيسية</span>
+            </button>
+            
+            <button class="nav-item" data-tab="about">
+                <i data-lucide="info"></i>
+                <span>عن التطبيق</span>
+            </button>
+        </nav>
+
+        <!-- صفحة تفاصيل المنتج -->
+        <div id="product-details-page" class="product-page hidden">
+            <div class="product-page-header">
+                <button class="back-btn" onclick="closeProductPage()">
+                    <i data-lucide="arrow-right"></i>
+                </button>
+                <h2>التفاصيل</h2>
+            </div>
+            <div id="product-page-content" class="product-page-content">
+                <!-- سيتم تعبئة البيانات هنا عبر الجافاسكريبت -->
+            </div>
+        </div>
+    </div>
+
+    <!-- مكتبات قواعد البيانات Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
