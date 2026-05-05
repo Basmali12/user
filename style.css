@@ -1,0 +1,227 @@
+/* إعداد المتغيرات لدعم الوضع الليلي والنهاري */
+:root {
+    --bg-color: #f8fafc;
+    --text-color: #111827;
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --nav-bg: rgba(255, 255, 255, 0.95);
+    --border-color: #e2e8f0;
+    --primary-color: #4f46e5;
+    --text-muted: #6b7280;
+}
+
+/* ألوان الوضع الليلي */
+body.dark-mode {
+    --bg-color: #0f172a;
+    --text-color: #f8fafc;
+    --card-bg: #1e293b;
+    --nav-bg: rgba(15, 23, 42, 0.95);
+    --border-color: #334155;
+    --text-muted: #9ca3af;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    height: 100vh;
+    overflow: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* شاشة البداية */
+.intro-screen {
+    position: fixed; inset: 0; z-index: 99999;
+    background: #0f172a; display: flex;
+    justify-content: center; align-items: center;
+    transition: opacity 0.8s, visibility 0.8s;
+}
+.intro-screen.hidden { opacity: 0; visibility: hidden; }
+.intro-text { display: flex; gap: 12px; font-size: 38px; font-weight: 900; }
+.intro-text span {
+    background: linear-gradient(135deg, #a5b4fc, #818cf8, #c084fc);
+    -webkit-background-clip: text; color: transparent;
+    opacity: 0; transform: translateY(30px) scale(0.9);
+    animation: textIntro 1s forwards;
+}
+.intro-text span:nth-child(1) { animation-delay: 0.2s; }
+.intro-text span:nth-child(2) { animation-delay: 0.4s; }
+.intro-text span:nth-child(3) { animation-delay: 0.6s; }
+
+@keyframes textIntro { to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* الحاوية الرئيسية للتطبيق */
+.app-container {
+    display: flex; flex-direction: column;
+    height: 100%; width: 100%; max-width: 600px;
+    margin: 0 auto; background-color: var(--bg-color);
+    position: relative; overflow: hidden;
+}
+
+.header {
+    padding: 16px 20px; background-color: var(--nav-bg);
+    backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-color);
+    text-align: center; position: sticky; top: 0; z-index: 20;
+}
+.logo {
+    font-size: 24px; font-weight: 900;
+    background: linear-gradient(to right, #4f46e5, #9333ea);
+    -webkit-background-clip: text; color: transparent;
+}
+
+.main-content {
+    flex: 1; overflow-y: auto;
+    padding: 20px 16px 100px 16px; scroll-behavior: smooth;
+}
+
+/* التبويبات السفلية (تم تصغيرها) */
+.bottom-nav {
+    position: absolute; bottom: 0; width: 100%;
+    background-color: var(--nav-bg); backdrop-filter: blur(24px);
+    border-top: 1px solid var(--border-color);
+    display: flex; justify-content: space-around; align-items: flex-end;
+    padding: 8px 16px 12px 16px; /* حشوات أصغر */
+    z-index: 50;
+    border-top-left-radius: 20px; border-top-right-radius: 20px;
+}
+.nav-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    width: 60px; gap: 4px; border: none; background: transparent;
+    cursor: pointer; color: var(--text-muted); transition: all 0.3s ease;
+}
+.nav-item.active { color: var(--primary-color); }
+.nav-item i { width: 20px; height: 20px; } /* تصغير الأيقونات قليلاً */
+.nav-item span { font-size: 11px; font-weight: 700; margin-top: 2px; }
+
+/* زر الرئيسية الدائري (تم تصغيره) */
+.center-tab .circle {
+    background: linear-gradient(135deg, #4f46e5, #9333ea);
+    width: 45px; height: 45px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; transform: translateY(-8px);
+    box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+    border: 4px solid var(--bg-color); transition: transform 0.3s ease;
+}
+.center-tab.active .circle { transform: translateY(-12px) scale(1.05); }
+
+/* الإعلان العلوي */
+.top-ad-container {
+    width: 100%; height: 180px; border-radius: 20px; overflow: hidden;
+    margin-bottom: 25px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+.top-ad-container img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------------------------------- */
+/* المنتجات - تأثير الإطار الذهبي المتحرك */
+/* ---------------------------------- */
+.products-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+.product-card {
+    position: relative;
+    border-radius: 20px;
+    padding: 3px; /* هذا يمثل سُمك الإطار الذهبي */
+    cursor: pointer;
+    text-align: center;
+    overflow: hidden; /* لإخفاء أي جزء يخرج عن البطاقة */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    isolation: isolate; /* لعزل العناصر وترتيب الطبقات بشكل صحيح */
+}
+
+/* التدرج اللوني الذي يدور بالخلفية */
+.product-card::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    /* لونين للإطار: ذهبي فاتح وذهبي غامق */
+    background: conic-gradient(from 0deg, transparent 70%, #ffd700 85%, #d4af37 100%);
+    animation: rotate-gold-border 3s linear infinite; /* حركة مستمرة */
+    z-index: -2;
+}
+
+/* طبقة الخلفية الداخلية لتغطية وسط البطاقة وإبقاء الإطار فقط */
+.product-card::after {
+    content: '';
+    position: absolute;
+    inset: 3px; /* ترك 3 بيكسل مسافة للإطار الذهبي */
+    background-color: var(--card-bg);
+    border-radius: 17px; /* زاوية دائرية للداخل */
+    z-index: -1;
+}
+
+/* حركة الدوران */
+@keyframes rotate-gold-border {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* حاوية محتوى المنتج (الصورة والاسم) */
+.product-content-wrapper {
+    position: relative;
+    z-index: 1; /* يجب أن يكون فوق الخلفية الداخلية */
+    padding: 10px;
+}
+
+.product-image-wrap { width: 100%; height: 130px; border-radius: 12px; overflow: hidden; margin-bottom: 10px; }
+.product-image-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.product-name { font-size: 15px; font-weight: 700; color: var(--text-color); margin-bottom: 5px; line-height: 1.4; }
+
+/* ---------------------------------- */
+/* تصميم صفحة تفاصيل المنتج */
+/* ---------------------------------- */
+.product-page {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--bg-color); z-index: 100;
+    display: flex; flex-direction: column;
+    transform: translateX(0); transition: transform 0.3s ease;
+}
+.product-page.hidden { transform: translateX(-100%); }
+.product-page-header {
+    display: flex; align-items: center; padding: 15px 20px;
+    background-color: var(--nav-bg); border-bottom: 1px solid var(--border-color);
+}
+.back-btn {
+    background: none; border: none; color: var(--text-color);
+    font-size: 24px; cursor: pointer; margin-left: 15px; display: flex; align-items: center;
+}
+.product-page-content { flex: 1; overflow-y: auto; padding: 0 0 50px 0; }
+.details-image { width: 100%; height: 350px; object-fit: cover; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; margin-bottom: 20px; }
+.details-info-container { padding: 0 20px; }
+.title-and-btn { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.details-title { font-size: 22px; font-weight: 900; color: var(--text-color); flex: 1; }
+.details-btn {
+    background-color: var(--primary-color); color: white;
+    padding: 8px 16px; border-radius: 12px; text-decoration: none;
+    font-weight: bold; display: inline-flex; align-items: center; gap: 8px; font-size: 14px;
+}
+.details-desc { color: var(--text-muted); line-height: 1.8; font-size: 15px; }
+
+/* ---------------------------------- */
+/* تصميم صفحات الإعدادات والملف الشخصي */
+/* ---------------------------------- */
+.app-list { display: flex; flex-direction: column; gap: 10px; }
+.app-list-item {
+    background-color: var(--card-bg); border: 1px solid var(--border-color);
+    border-radius: 16px; padding: 16px; cursor: pointer;
+}
+.app-list-header { display: flex; align-items: center; justify-content: space-between; color: var(--text-color); font-weight: bold; font-size: 15px;}
+.app-list-header i.icon-main { color: var(--primary-color); margin-left: 10px; width: 20px; }
+.app-list-body {
+    margin-top: 15px; color: var(--text-muted); font-size: 14px; line-height: 1.7;
+    display: none; border-top: 1px solid var(--border-color); padding-top: 15px;
+}
+.app-list-item.open .app-list-body { display: block; }
+
+.action-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 15px; border-radius: 16px; font-weight: bold; font-size: 15px;
+    text-decoration: none; color: white; margin-bottom: 15px; border: none; cursor: pointer;
+}
+.btn-whatsapp { background-color: #25D366; }
+.btn-facebook { background-color: #1877F2; }
+.btn-theme { background-color: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); }
+
+.loader-container { display: flex; justify-content: center; padding-top: 50px; }
+.spinner { animation: spin 1s linear infinite; color: var(--primary-color); width: 40px; height: 40px; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
