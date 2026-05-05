@@ -1,6 +1,20 @@
 lucide.createIcons();
 
-// شاشة البداية وضبط الوضع الليلي التلقائي
+// قائمة الثيمات الـ 10
+const themesList = [
+    { id: 'theme-dark', name: 'ليلي', bg: '#0f172a' },
+    { id: 'theme-light', name: 'نهاري', bg: '#f8fafc', color: '#000' },
+    { id: 'theme-blue', name: 'أزرق', bg: '#0a192f' },
+    { id: 'theme-purple', name: 'بنفسجي', bg: '#2e0249' },
+    { id: 'theme-green', name: 'أخضر', bg: '#0f2027' },
+    { id: 'theme-red', name: 'أحمر', bg: '#2b0f0f' },
+    { id: 'theme-gold', name: 'ذهبي', bg: '#1a1814' },
+    { id: 'theme-neon', name: 'نيون', bg: '#000000' },
+    { id: 'theme-ocean', name: 'محيط', bg: '#001f3f' },
+    { id: 'theme-animated', name: 'متحرك 🌟', bg: 'linear-gradient(45deg, #ee7752, #e73c7e, #23a6d5)' }
+];
+
+// شاشة البداية وضبط الثيم المحفوظ
 window.addEventListener('load', () => {
     const introScreen = document.getElementById('intro-screen');
     if (introScreen) {
@@ -10,16 +24,12 @@ window.addEventListener('load', () => {
         }, 2200);
     }
     
-    const savedTheme = localStorage.getItem('theme');
-    if(savedTheme === 'dark' || !savedTheme) {
-        document.body.classList.add('dark-mode');
-        localStorage.setItem('theme', 'dark');
-    } else {
-        document.body.classList.remove('dark-mode');
-    }
+    // تطبيق الثيم المحفوظ، وإذا لم يوجد نختار الليلي الافتراضي
+    const savedTheme = localStorage.getItem('appTheme') || 'theme-dark';
+    document.body.className = savedTheme;
 });
 
-// إعدادات قاعدة البيانات (Firebase)
+// إعدادات Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBnYczto0EvZU-LowX1Ps3NvYALnmmutr0",
     authDomain: "ljioik.firebaseapp.com",
@@ -35,11 +45,12 @@ const db = firebase.firestore();
 let currentTab = 'home';
 let productsData = [];
 let adsData = [];
+let searchQuery = ''; // متغير لحفظ ما يكتبه المستخدم في البحث
 
 const mainContent = document.getElementById('main-content');
 const navItems = document.querySelectorAll('.nav-item');
 
-// جلب البيانات من فايربيس (قمنا بإزالة جلب البنرات لعدم الحاجة إليها)
+// جلب البيانات من فايربيس
 function setupSubscriptions() {
     db.collection("products").onSnapshot(snapshot => {
         productsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -52,46 +63,75 @@ function setupSubscriptions() {
     });
 }
 
-// بناء صفحة "الرئيسية"
-function renderHome() {
-    // عرض الإعلان العلوي إن وجد
-    let topAdHtml = '';
-    if (adsData.length > 0) {
-        topAdHtml = `<div class="top-ad-container"><img src="${adsData[0].imageUrl}" alt="إعلان رئيسي"></div>`;
-    }
-
-    // عرض المنتجات مع تعديل الهيكل لدعم الإطار الذهبي المتحرك
-    let productsHtml = '<div class="products-wrapper">';
-    productsData.forEach(p => {
-        productsHtml += `
-            <div class="product-card" onclick="openProductPage('${p.id}')">
-                <!-- هذا التغليف مهم لكي لا يختفي المحتوى تحت الإطار الذهبي -->
-                <div class="product-content-wrapper">
-                    <div class="product-image-wrap"><img src="${p.imageUrl}" alt="${p.name}"></div>
-                    <h3 class="product-name">${p.name}</h3>
-                </div>
-            </div>
-        `;
-    });
-    productsHtml += '</div>';
-
-    // دمج الإعلان والمنتجات في الصفحة
-    mainContent.innerHTML = topAdHtml + productsHtml;
-    lucide.createIcons();
+// دالة لمعالجة البحث الفوري
+window.handleSearch = function(value) {
+    searchQuery = value.toLowerCase();
+    renderHome(false); // نمرر false حتى لا نفقد التركيز على مربع البحث
 }
 
-// ==========================================
+// بناء صفحة "الرئيسية"
+function renderHome(resetSearch = true) {
+    if(resetSearch && currentTab !== 'home') searchQuery = ''; // تصفير البحث عند التنقل
+
+    let html = '';
+
+    // 1. حقل البحث
+    html += `
+        <div class="search-container">
+            <div class="search-box">
+                <i data-lucide="search"></i>
+                <input type="text" id="productSearch" placeholder="ابحث عن منتج..." value="${searchQuery}" onkeyup="handleSearch(this.value)" autofocus>
+            </div>
+        </div>
+    `;
+
+    // 2. عرض الإعلان العلوي إن وجد (فقط إذا لم يكن يبحث لتقليل التشتت)
+    if (adsData.length > 0 && searchQuery === '') {
+        html += `<div class="top-ad-container"><img src="${adsData[0].imageUrl}" alt="إعلان رئيسي"></div>`;
+    }
+
+    // 3. فلترة المنتجات حسب البحث (فهرسة من الحروف الأولى)
+    const filteredProducts = productsData.filter(p => p.name.toLowerCase().includes(searchQuery));
+
+    if(filteredProducts.length === 0) {
+        html += `<div style="text-align:center; padding: 50px; color: var(--text-muted);"><i data-lucide="package-x" style="width:50px;height:50px;margin-bottom:10px;"></i><p>لا توجد منتجات مطابقة للبحث</p></div>`;
+    } else {
+        html += '<div class="products-wrapper">';
+        filteredProducts.forEach(p => {
+            html += `
+                <div class="product-card" onclick="openProductPage('${p.id}')">
+                    <div class="product-content-wrapper">
+                        <div class="product-image-wrap"><img src="${p.imageUrl}" alt="${p.name}"></div>
+                        <h3 class="product-name">${p.name}</h3>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
+
+    mainContent.innerHTML = html;
+    lucide.createIcons();
+
+    // إعادة التركيز على حقل البحث إذا كان المستخدم يكتب
+    if (!resetSearch) {
+        const searchInput = document.getElementById('productSearch');
+        if (searchInput) {
+            searchInput.focus();
+            // وضع المؤشر في نهاية النص
+            searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+        }
+    }
+}
+
 // وظائف صفحة تفاصيل المنتج
-// ==========================================
 function openProductPage(productId) {
     const product = productsData.find(p => p.id === productId);
     if (!product) return;
 
-    let linkUrl = "#";
-    let linkLabel = "دخول";
+    let linkUrl = "#"; let linkLabel = "دخول";
     if (product.links && product.links.length > 0) {
-        linkUrl = product.links[0].url;
-        linkLabel = product.links[0].label;
+        linkUrl = product.links[0].url; linkLabel = product.links[0].label;
     }
 
     const contentDiv = document.getElementById('product-page-content');
@@ -101,8 +141,7 @@ function openProductPage(productId) {
             <div class="title-and-btn">
                 <h1 class="details-title">${product.name}</h1>
                 ${product.links && product.links.length > 0 ? 
-                  `<a href="${linkUrl}" target="_blank" class="details-btn">${linkLabel} <i data-lucide="external-link" style="width:16px"></i></a>` 
-                  : ''}
+                  `<a href="${linkUrl}" target="_blank" class="details-btn">${linkLabel} <i data-lucide="external-link" style="width:16px"></i></a>` : ''}
             </div>
             <p class="details-desc">${product.description || 'لا يوجد وصف متاح لهذا المنتج.'}</p>
         </div>
@@ -112,43 +151,34 @@ function openProductPage(productId) {
     lucide.createIcons();
 }
 
-function closeProductPage() {
+window.closeProductPage = function() {
     document.getElementById('product-details-page').classList.add('hidden');
 }
 
-// ==========================================
 // بناء صفحة عن التطبيق
-// ==========================================
 function renderAbout() {
     mainContent.innerHTML = `
         <h2 style="margin-bottom: 20px; text-align: center;">حول التطبيق</h2>
         <div class="app-list">
             <div class="app-list-item" onclick="this.classList.toggle('open')">
                 <div class="app-list-header">
-                    <div style="display:flex; align-items:center;">
-                        <i data-lucide="info" class="icon-main"></i> من نحن
-                    </div>
+                    <div style="display:flex; align-items:center;"><i data-lucide="info" class="icon-main"></i> من نحن</div>
                     <i data-lucide="chevron-down"></i>
                 </div>
                 <div class="app-list-body">
-                    <p style="margin-bottom:10px;">نحن في <b>فن التكنولوجيا الحديث</b> نسعى دائمًا لتقديم أفضل الحلول البرمجية والتقنية المبتكرة التي تلبي تطلعاتكم وتواكب عصر التطور السريع. نضع بين أيديكم خبراتنا لضمان الجودة والتميز في كل مشروع.</p>
-                    <p>يشرفنا انضمامكم لعائلتنا ومتابعة أحدث أعمالنا من خلال منصاتنا.</p>
-                    <br>
-                    <a href="https://www.facebook.com/share/1RYfQSXgoz/" target="_blank" class="action-btn btn-facebook" style="padding: 10px;">
-                        <i data-lucide="facebook"></i> زيارة صفحتنا على فيسبوك
+                    <p style="margin-bottom:10px;">نحن في <b>فن التكنولوجيا الحديث</b> نسعى دائمًا لتقديم أفضل الحلول البرمجية والتقنية المبتكرة التي تلبي تطلعاتكم وتواكب عصر التطور السريع.</p>
+                    <a href="https://www.facebook.com/share/1RYfQSXgoz/" target="_blank" class="action-btn btn-facebook" style="padding: 10px; margin-top:10px;">
+                        <i data-lucide="facebook"></i> زيارة صفحتنا
                     </a>
                 </div>
             </div>
-
             <div class="app-list-item" onclick="this.classList.toggle('open')">
                 <div class="app-list-header">
-                    <div style="display:flex; align-items:center;">
-                        <i data-lucide="shield-check" class="icon-main"></i> سياسة الخصوصية
-                    </div>
+                    <div style="display:flex; align-items:center;"><i data-lucide="shield-check" class="icon-main"></i> سياسة الخصوصية</div>
                     <i data-lucide="chevron-down"></i>
                 </div>
                 <div class="app-list-body">
-                    نحن نحترم خصوصيتك ونلتزم بحماية بياناتك. جميع المعلومات التي يتم جمعها تستخدم فقط لتحسين تجربة استخدامك للتطبيق ولن يتم مشاركتها مع أي جهات خارجية دون موافقتك الصريحة.
+                    نحن نحترم خصوصيتك ونلتزم بحماية بياناتك. التطبيق يستخدم تقنيات آمنة للتصفح ولا نشارك بياناتك مع جهات خارجية.
                 </div>
             </div>
         </div>
@@ -156,42 +186,55 @@ function renderAbout() {
     lucide.createIcons();
 }
 
-// ==========================================
+// دالة تغيير الثيم
+window.changeTheme = function(themeId) {
+    document.body.className = themeId;
+    localStorage.setItem('appTheme', themeId);
+    renderProfile(); // لإعادة تحديث علامة الاختيار
+}
+
 // بناء صفحة حسابي
-// ==========================================
 function renderProfile() {
-    const isDark = document.body.classList.contains('dark-mode');
+    const currentTheme = document.body.className || 'theme-dark';
+    
+    // إنشاء أزرار الثيمات
+    let themesHtml = '<div class="themes-grid">';
+    themesList.forEach(t => {
+        const isActive = currentTheme === t.id ? 'active-theme' : '';
+        const textColor = t.color || '#fff';
+        themesHtml += `
+            <button class="theme-btn ${isActive}" style="background: ${t.bg}; color: ${textColor};" onclick="changeTheme('${t.id}')">
+                ${isActive ? '<i data-lucide="check-circle" style="width:16px;"></i>' : ''} ${t.name}
+            </button>
+        `;
+    });
+    themesHtml += '</div>';
+
     mainContent.innerHTML = `
-        <div style="text-align: center; margin-bottom: 30px;">
-            <i data-lucide="user-circle" style="width: 80px; height: 80px; color: var(--primary-color);"></i>
-            <h2>مرحباً بك</h2>
-            <p style="color: var(--text-muted); font-size: 14px;">إعدادات الحساب والتواصل</p>
+        <div style="text-align: center; margin-bottom: 25px;">
+            <i data-lucide="user-circle" style="width: 70px; height: 70px; color: var(--primary-color);"></i>
+            <h2>إعدادات الحساب</h2>
+        </div>
+
+        <div class="app-list" style="margin-bottom: 25px;">
+            <div class="app-list-item" style="cursor: default;">
+                <div class="app-list-header" style="justify-content:center;">
+                    <i data-lucide="palette" style="margin-left:8px;"></i> اختر مظهر التطبيق
+                </div>
+                ${themesHtml}
+            </div>
         </div>
 
         <div class="app-list">
-            <button class="action-btn btn-theme" onclick="toggleTheme()">
-                <i data-lucide="${isDark ? 'sun' : 'moon'}"></i>
-                <span>${isDark ? 'تفعيل الوضع النهاري' : 'تفعيل الوضع الليلي'}</span>
-            </button>
-
             <a href="https://www.facebook.com/share/1RYfQSXgoz/" target="_blank" class="action-btn btn-facebook">
                 <i data-lucide="facebook"></i> الصفحة الرسمية
             </a>
-
             <a href="https://wa.me/9647729373260" target="_blank" class="action-btn btn-whatsapp">
                 <i data-lucide="message-circle"></i> تواصل عبر واتساب
             </a>
         </div>
     `;
     lucide.createIcons();
-}
-
-// تبديل الثيم
-function toggleTheme() {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    renderProfile(); 
 }
 
 // التنقل بين الصفحات السفلية
